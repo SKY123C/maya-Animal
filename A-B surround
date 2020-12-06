@@ -1,0 +1,29 @@
+import maya.cmds as mc
+
+def key(frame, angle, axis):
+    if axis == "x" or axis == "X":
+        axis = [angle, 0, 0]
+    elif axis == "y" or axis == "Y":
+        axis = [0, angle, 0]
+    elif axis == "z" or axis == "Z":
+        axis = [0, 0, angle]
+    else:
+        mc.error("Please input correct axis!")
+
+    select_list = mc.ls(sl=1)
+
+    if len(select_list) != 2 :
+        mc.error("Please selecting correctly")
+    translate_surrounded = mc.xform(select_list[0], q=1, t=1)
+    translate_surround = mc.xform(select_list[1], q=1, t=1)
+    translate = map(lambda x: (x[0] - x[1])*-1, zip(translate_surrounded, translate_surround))
+    mc.setKeyframe(select_list[1], at=["tx", "ty", "tz", "rx", "ry", "rz"], time=1)
+    for i in xrange(1, frame+1):
+
+        mc.xform(select_list[1],t=translate_surrounded)
+        mc.xform(select_list[1], r=1, ro=axis)
+        mc.xform(select_list[1], r=1, os=1, t=translate)
+        mc.setKeyframe(select_list[1], at=["tx", "ty", "tz", "rx", "ry", "rz"], time=i+1)
+
+
+key(10, 36, "x")
