@@ -1,0 +1,44 @@
+# coding:utf-8
+import maya.cmds as mc
+import maya.OpenMaya as om
+import maya.OpenMayaUI as omui
+import pymel.core as pm
+
+obj = mc.ls(sl=1)
+if not obj:
+    raise Exception("Please select object")
+mesh = om.MFnMesh(pm.PyNode(obj[0]).__apimdagpath__())
+view = omui.M3dView.active3dView()  # 默认透视图
+
+camera_pos = om.MPoint()
+vector = om.MVector()
+normal = om.MVector()
+hit = om.MFloatPoint()
+util = om.MScriptUtil()
+
+
+def press():
+    pos = mc.draggerContext('Test', query=True, anchorPoint=True)
+    view.viewToWorld(int(pos[0]), int(pos[1]), camera_pos, vector)
+    mesh.closestIntersection(om.MFloatPoint(camera_pos), om.MFloatVector(vector), None, None, False,
+                             om.MSpace.kWorld, 999, False, None, hit,
+                             None, None, None, None, None)
+
+    mesh.getClosestNormal(om.MPoint(hit), normal, om.MSpace.kWorld)
+    ro = mc.angleBetween(er=True, v1=(0.0, 1.0, 0.0), v2=(normal.x, normal.y, normal.z))
+    print ro
+    mc.xform(mc.polyCube(ch=1)[0], t=[hit[0], hit[1], hit[2]], ro=ro)
+
+
+def drag():
+    print 1
+
+
+if not mc.draggerContext('Test', ex=1):
+    mc.draggerContext('Test', pressCommand='press()',
+                      dragCommand='drag()', cursor='hand')
+    mc.setToolTo("Test")
+else:
+    mc.setToolTo("Test")
+
+
